@@ -45,33 +45,89 @@ app.get('/frutas', async(req, res) => {
   }
 });
 
-//RUTA a Frutas/:id
-app.get('/frutas/:id', async(req, res) => {
+//RUTA a Frutas/:id Revisar con la clase
+app.get('/frutas/id/:id', async(req, res) => {
   try {
-    //conexion a Base de Datos:
+    const idFruta = parseInt(req.params.id) || 0;    
+    //conexion a base de datos:
     const client = await connectToMongoDB();
     if(!client) {
       res.status(500).send('Error al conectarse a Mongo DB');
       return
     }
-    //almacenamos parametro: id
-    const frutaId = parseInt(req.params.id) || 0;
-    //en caso contrario, si hay cliente:
-    const db = await client.db('frutas');
-    //si logramos acceder a la base de datos pedimos acceso a la coleccion
-    const fruta = await db.collection('frutas').findOne({ id: frutaId });
-    res.json(fruta)
-    //si tenemos algun error lo tenemos q manejar:
+    
+    const db = client.db('frutas');
+    const fruta = await db.collection('frutas').findOne({ id: idFruta });
+    !fruta ? res.status(401).json({"mensaje": "Error en la solicitud"}) : res.status(200).json(fruta);
+  
   } catch (error) {
     res.status(500).send('error al intentar obtener frutas de la base de datos');
-    //IMPORTANTE: CERRAR CONEXION A BASE DE DATOS
+  }finally {
+    await disconnectFromMongoDB();
+  }
+});
+    
+
+//Ruta a Frutas/:nombre REVISAR
+app.get('/frutas/nombre/:nombre', async(req, res) => {
+  try {
+    //capturamos parametro necesario
+    const nombreFruta = req.params.nombre;
+    //console.log(frutaNombre);
+    const client = await connectToMongoDB();
+    if(!client) {
+      res.status(500).send("Error al conectarse a Mongo DB");
+      return
+    }
+
+    const db = client.db('frutas');
+    //aplicamos metodos para acceder al dato que necesitamos
+    const fruta = await db.collection('frutas').find( { nombre: RegExp (nombreFruta, "i") } ).toArray();
+    //comprobamos si el array fruta esta vacia o tiene algo
+    fruta.length > 0 ? res.status(200).json(fruta) : res.status(404).json('error: Error en la solicitud');
+
+  }catch (error) {
+    res.status(500).send('Error al obtener la fruta de la base de datos');
+    //desconectamos
+  }finally {
+    await disconnectFromMongoDB();
+  }
+});
+
+//RUTA a Frutas por precio:
+app.get('/frutas/importe/:precio', async(req, res) => {
+  try {
+    //capturamos parametro necesario y lo covertimos a numero
+    const precioFruta = parseInt (req.params.precio);
+    //console.log(precioFruta);
+    //conexion a base de datos
+    const client = await connectToMongoDB();
+    if(!client) {
+      res.status(500).send("Error al conectarse a Mongo DB");
+      return
+    }
+
+    const db = client.db('frutas');
+    //aplicamos metodos para acceder al dato que necesitamos
+    const fruta = await db.collection('frutas').find( { importe: { $gte: precioFruta } } ).toArray();
+    //comprobamos si el array fruta esta vacia o tiene algo
+    fruta.length > 0 ? res.status(200).json(fruta) : res.status(404).json('error: Error en la solicitud');
+
+  }catch (error) {
+    res.status(500).send('Error al obtener la fruta de la base de datos');
+    //desconectamos
   }finally {
     await disconnectFromMongoDB();
   }
 });
 
 
+
 app.listen(PORT, () => {
   console.log(`Servidor escuchando en el puerto ${PORT}`); 
   connectToMongoDB();
 });
+//------------------------------------------------------------------------------------------------------------------
+//CRUD:
+//  Como desarrollar un crud con mongo db y express
+

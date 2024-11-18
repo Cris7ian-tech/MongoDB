@@ -20,6 +20,8 @@ const connectToMongoDB = async () => {
   }
 }
 
+
+
 //Funcion para desconectar de MongoDB
 const disconnectFromMongoDB = async () => {
   try {
@@ -31,6 +33,8 @@ const disconnectFromMongoDB = async () => {
     return null;
   }
 }
+
+
 
 module.exports = {
   connectToMongoDB,
