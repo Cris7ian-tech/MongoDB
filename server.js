@@ -122,12 +122,41 @@ app.get('/frutas/importe/:precio', async(req, res) => {
 });
 
 
+//------------------------------------------------------------------------------------------------------------------
+//CRUD:
+//    Como desarrollar un CRUD con mongo db y express (Crear un nuevo recurso))
+app.post("/frutas", async(req, res)=>{
+  try {
+    const nuevaFruta = req.body;
+    //console.log(nuevaFruta);
+    if(nuevaFruta === undefined) {
+      res.status(400).send('Error en el formato de datos a crear')
+    }
+    //modulo de conexion
+    const client = await connectToMongoDB();
+    if(!client) {
+      res.status(500).send("Error al conectarse a Mongo DB");
+      return
+    }
+    //para crear nuevo recurso, nos conectamos a base de datos
+    const db = client.db('frutas');
+    const collection = db.collection('frutas');
+    await collection.insertOne(nuevaFruta);
+    console.log("Nuevo recurso creado!");
+    res.status(201).send(nuevaFruta);
+
+  } catch (error) {
+    res.status(500).send('Error al intentar crear un nuevo recurso');
+  } finally {
+    await disconnectFromMongoDB();
+  }
+})
+
+
+
+
 
 app.listen(PORT, () => {
   console.log(`Servidor escuchando en el puerto ${PORT}`); 
   connectToMongoDB();
 });
-//------------------------------------------------------------------------------------------------------------------
-//CRUD:
-//  Como desarrollar un crud con mongo db y express
-
