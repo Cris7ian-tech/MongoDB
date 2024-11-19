@@ -152,6 +152,77 @@ app.post("/frutas", async(req, res)=>{
   }
 })
 
+//Modificar un recurso: metodo .put
+app.put("/frutas/id/:id", async(req, res)=>{
+  try {
+    const idFruta = parseInt(req.params.id);
+    const nuevosDatos = req.body;     
+
+    if(!nuevosDatos) {
+      res.status(400).send('Error en el formato de datos a crear')
+    }
+
+    const client = await connectToMongoDB();
+    if(!client) {
+      res.status(500).send("Error al conectarse a Mongo DB");
+      return
+    }
+
+    const db = client.db('frutas');
+    const collection = db.collection('frutas');
+    await collection.updateOne( {id: idFruta}, {$set: nuevosDatos} );
+    //console.log(`La Fruta ${idFruta} ha sido modificada!`);
+    res.status(200).send(nuevosDatos);
+
+
+  } catch (error) {
+
+    res.status(500).json( {"mensaje": error.message});
+
+  }finally{
+    await disconnectFromMongoDB();
+  }
+
+})
+
+
+
+//Eliminar un recurso: metodo .delete
+app.delete("/frutas/id/:id", async(req, res)=>{
+  try {
+    const idFruta = parseInt(req.params.id);
+    const nuevosDatos = req.body;
+
+    if(!idFruta) {
+      res.status(400).send('Error en el formato de datos a Eliminar')
+    }
+
+    const client = await connectToMongoDB();
+    if(!client) {
+      res.status(500).send("Error al conectarse a Mongo DB");
+      return
+    }
+
+    const db = client.db('frutas');
+    const collection = db.collection('frutas');
+    const resultado =await collection.deleteOne( {id: idFruta} );
+    
+    resultado.deletedCount === 0 ? res.status(404).send(`No se encontro ninguna fruta con el id seleccionado!`) : res.status(204).json({"mensaje": "El recurso se elimino correctamente"});
+
+  } catch (error) {
+
+    res.status(500).json( {"mensaje": error.message});
+
+  }finally{
+    await disconnectFromMongoDB();
+  }
+
+})
+
+//------------------------------------------------------------------------------------------------------------------
+/*
+ESPACIO DE TRABAJO: TESTEAR (  )
+*/ 
 
 
 
